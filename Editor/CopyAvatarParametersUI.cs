@@ -1,10 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEditor;
-#if VRC_SDK_VRCSDK3
 using VRC.SDK3.Editor;
-#elif VRC_SDK_VRCSDK2
-#endif
 using VRC.SDKBase.Editor;
 using Jirko.Unity.VRoidAvatarUtils;
 
@@ -19,11 +16,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
 
         public int avatarMode = 0;
         public bool viewPosition = true;
-#if VRC_SDK_VRCSDK3
         public bool eyeMovements = true;
-#elif VRC_SDK_VRCSDK2
-        public bool eyeMovements = false;
-#endif
+        public bool baseAnimationLayers = true;
+        public bool specialAnimationLayers = true;
+        public bool expressionsMenu = true;
+        public bool expressionParameters = true;
         public bool rotationStates = true;
         public bool blueprintId = true;
         public bool dynamicBones = true;
@@ -60,15 +57,23 @@ namespace Jirko.Unity.VRoidAvatarUtils
 
             viewPosition = EditorGUILayout.Toggle("View Position", viewPosition);
 
-#if VRC_SDK_VRCSDK3
             if (folding = EditorGUILayout.Foldout(folding, "Eye Look"))
             {
                 eyeMovements = EditorGUILayout.Toggle("Eye Movements", eyeMovements);
                 rotationStates = EditorGUILayout.Toggle("Rotation States", rotationStates);
 
             }
-#elif VRC_SDK_VRCSDK2
-#endif
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Playable Layers", EditorStyles.boldLabel);
+            baseAnimationLayers = EditorGUILayout.Toggle("Base", baseAnimationLayers);
+            specialAnimationLayers = EditorGUILayout.Toggle("Special", specialAnimationLayers);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Expressions", EditorStyles.boldLabel);
+            expressionsMenu = EditorGUILayout.Toggle("Menu", expressionsMenu);
+            expressionParameters = EditorGUILayout.Toggle("Parameters", expressionParameters);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Pipeline Manager", EditorStyles.boldLabel);
             blueprintId = EditorGUILayout.Toggle("Blueprint ID", blueprintId);
@@ -106,6 +111,10 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 sourceAvatarDTO.avatarMode = avatarMode;
                 sourceAvatarDTO.viewPosition = viewPosition;
                 sourceAvatarDTO.eyeMovements = eyeMovements;
+                sourceAvatarDTO.baseAnimationLayers = baseAnimationLayers;
+                sourceAvatarDTO.specialAnimationLayers = specialAnimationLayers;
+                sourceAvatarDTO.expressionsMenu = expressionsMenu;
+                sourceAvatarDTO.expressionParameters = expressionParameters;
                 sourceAvatarDTO.rotationStates = rotationStates;
                 sourceAvatarDTO.blueprintId = blueprintId;
                 sourceAvatarDTO.dynamicBones = dynamicBones;

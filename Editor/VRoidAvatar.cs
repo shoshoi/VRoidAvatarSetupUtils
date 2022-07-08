@@ -1,10 +1,6 @@
 ﻿using UnityEngine;
-#if VRC_SDK_VRCSDK3
 using VRC.SDK3.Avatars.Components;
 using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor.CustomEyeLookSettings;
-#elif VRC_SDK_VRCSDK2
-using VRCSDK2;
-#endif
 using System.Collections.Generic;
 using UnityEditorInternal;
 
@@ -35,6 +31,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public Quaternion quaterSR;
         public string srcBlueprintId;
 
+        public VRCAvatarDescriptor.CustomAnimLayer[] srcBaseAnimationLayers;
+        public VRCAvatarDescriptor.CustomAnimLayer[] srcSpecialAnimationLayers;
+        public VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu srcExpressionsMenu;
+        public VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters srcExpressionParameters;
+
         public int avatarMode = 0;
         public bool viewPosition = true;
         public bool eyeMovements = true;
@@ -48,6 +49,10 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public bool dynamicBones_other = true;
         public bool dynamicBoneColiders = true;
         public bool objects = true;
+        public bool baseAnimationLayers = true;
+        public bool specialAnimationLayers = true;
+        public bool expressionsMenu = true;
+        public bool expressionParameters = true;
 
         public VRoidAvatar(GameObject gameObject)
         {
@@ -57,21 +62,19 @@ namespace Jirko.Unity.VRoidAvatarUtils
         void InitDTO()
         {
 
-#if VRC_SDK_VRCSDK3
             VRCAvatarDescriptor sourceAvatarDescriptor = null;
             sourceAvatarDescriptor = cloneGameObject.GetComponent<VRCAvatarDescriptor>();
-#elif VRC_SDK_VRCSDK2
-            VRC_AvatarDescriptor sourceAvatarDescriptor = null;
-            sourceAvatarDescriptor = cloneGameObject.GetComponent<VRC_AvatarDescriptor>();
-#endif
+
             viewX = sourceAvatarDescriptor.ViewPosition.x;
             viewY = sourceAvatarDescriptor.ViewPosition.y;
             viewZ = sourceAvatarDescriptor.ViewPosition.z;
 
-
-#if VRC_SDK_VRCSDK3
             confidence = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.confidence;
             excitement = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.excitement;
+            srcBaseAnimationLayers = sourceAvatarDescriptor.baseAnimationLayers;
+            srcSpecialAnimationLayers = sourceAvatarDescriptor.specialAnimationLayers;
+            srcExpressionsMenu = sourceAvatarDescriptor.expressionsMenu;
+            srcExpressionParameters = sourceAvatarDescriptor.expressionParameters;
 
             EyeRotations eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingRight;
             quaterRL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
@@ -88,8 +91,6 @@ namespace Jirko.Unity.VRoidAvatarUtils
             eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingStraight;
             quaterSL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
             quaterSR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-#elif VRC_SDK_VRCSDK2
-#endif
 
             VRC.Core.PipelineManager sourcePipelineManager = cloneGameObject.GetComponent<VRC.Core.PipelineManager>();
 
@@ -138,11 +139,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 exclusionBoneName.Add("Sleeve");
             }
 
-#if VRC_SDK_VRCSDK3
             VRCAvatarDescriptor targetAvatarDescriptor = gameObject.GetComponent<VRCAvatarDescriptor>();
-#elif VRC_SDK_VRCSDK2
-            VRC_AvatarDescriptor targetAvatarDescriptor = gameObject.GetComponent<VRC_AvatarDescriptor>();
-#endif
 
             if (viewPosition)
             {
@@ -153,7 +150,6 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 targetAvatarDescriptor.ViewPosition.z = viewZ;
             }
 
-#if VRC_SDK_VRCSDK3
             if (eyeMovements)
             {
                 messages.Add("Eye Look - Eye Movementsをコピー");
@@ -177,8 +173,56 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.left = quaterSL;
                 targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.right = quaterSR;
             }
-#elif VRC_SDK_VRCSDK2
-#endif
+
+            if(baseAnimationLayers){
+                messages.Add("BaseAnimationLayersをコピー");
+                foreach (var layer in srcBaseAnimationLayers){
+                    switch(layer.type){
+                        case VRCAvatarDescriptor.AnimLayerType.Base:
+                            targetAvatarDescriptor.baseAnimationLayers[0] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.Additive:
+                            targetAvatarDescriptor.baseAnimationLayers[1] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.Gesture:
+                            targetAvatarDescriptor.baseAnimationLayers[2] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.Action:
+                            targetAvatarDescriptor.baseAnimationLayers[3] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.FX:
+                            targetAvatarDescriptor.baseAnimationLayers[4] = layer;
+                            break;
+                    }
+                }
+            }
+
+            if(specialAnimationLayers){
+                messages.Add("SpecialAnimationLayersをコピー");
+                foreach (var layer in srcSpecialAnimationLayers){
+                    switch(layer.type){
+                        case VRCAvatarDescriptor.AnimLayerType.Sitting:
+                            targetAvatarDescriptor.specialAnimationLayers[0] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.TPose:
+                            targetAvatarDescriptor.specialAnimationLayers[1] = layer;
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.IKPose:
+                            targetAvatarDescriptor.specialAnimationLayers[2] = layer;
+                            break;
+                    }
+                }
+            }
+
+            if(expressionsMenu){
+                messages.Add("ExpressionsMenuをコピー");
+                targetAvatarDescriptor.expressionsMenu = srcExpressionsMenu; 
+            }
+
+            if(expressionParameters){
+                messages.Add("ExpressionParametersをコピー");
+                targetAvatarDescriptor.expressionParameters = srcExpressionParameters; 
+            }
 
             if (blueprintId)
             {
