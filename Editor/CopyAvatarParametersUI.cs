@@ -6,7 +6,8 @@ namespace Jirko.Unity.VRoidAvatarUtils
     public class CopyAvatarParametersUI : EditorWindow
     {
         bool folding = true;
-        Vector2 scrollPosition = new Vector2(0, 0);
+        Vector2 parametersScrollPosition = new Vector2(0, 0);
+        Vector2 messagesScrollPosition = new Vector2(0, 0);
         public GameObject sourceObject = null;
         public GameObject targetObject = null;
 
@@ -36,7 +37,6 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public bool scaleConstraint = true;
 
         public string messages = "";
-        public string errors = "";
 
         private VRoidAvatar sourceAvatarDTO = null;
 
@@ -44,11 +44,12 @@ namespace Jirko.Unity.VRoidAvatarUtils
         static void ShowWindow()
         {
             var window = EditorWindow.GetWindow<CopyAvatarParametersUI>();
-            window.minSize = new Vector2(400, 500);
+            window.minSize = new Vector2(400, 600);
         }
 
         void OnGUI()
         {
+            parametersScrollPosition = EditorGUILayout.BeginScrollView(parametersScrollPosition);
             EditorGUILayout.LabelField("VRC Avatar", EditorStyles.boldLabel);
             sourceObject = (GameObject)EditorGUILayout.ObjectField("Source Avatar", sourceObject, typeof(GameObject), true);
             targetObject = (GameObject)EditorGUILayout.ObjectField("Destination Avatar", targetObject, typeof(GameObject), true);
@@ -114,6 +115,8 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 EditorGUI.BeginDisabledGroup(true);
             }
 
+            EditorGUILayout.EndScrollView();
+
             if (GUILayout.Button("Copy"))
             {
                 sourceAvatarDTO = new VRoidAvatar(sourceObject);
@@ -157,7 +160,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
             {
                 EditorGUI.EndDisabledGroup();
             }
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            messagesScrollPosition = EditorGUILayout.BeginScrollView(messagesScrollPosition);
             GUILayout.Label(messages);
             EditorGUILayout.EndScrollView();
         }
