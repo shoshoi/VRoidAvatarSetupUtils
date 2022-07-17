@@ -58,7 +58,10 @@ namespace Jirko.Unity.VRoidAvatarUtils
 
             EditorGUILayout.LabelField("VRC Avatar Descripter", EditorStyles.boldLabel);
 
-            viewPosition = EditorGUILayout.Toggle("View Position", viewPosition);
+            if (folding = EditorGUILayout.Foldout(folding, "View"))
+            {
+                viewPosition = EditorGUILayout.Toggle("View Position", viewPosition);
+            }
 
             if (folding = EditorGUILayout.Foldout(folding, "Eye Look"))
             {
@@ -67,15 +70,18 @@ namespace Jirko.Unity.VRoidAvatarUtils
 
             }
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Playable Layers", EditorStyles.boldLabel);
-            baseAnimationLayers = EditorGUILayout.Toggle("Base", baseAnimationLayers);
-            specialAnimationLayers = EditorGUILayout.Toggle("Special", specialAnimationLayers);
+            if (folding = EditorGUILayout.Foldout(folding, "Playable Layers"))
+            {
+                baseAnimationLayers = EditorGUILayout.Toggle("Base", baseAnimationLayers);
+                specialAnimationLayers = EditorGUILayout.Toggle("Special", specialAnimationLayers);
+            }
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Expressions", EditorStyles.boldLabel);
-            expressionsMenu = EditorGUILayout.Toggle("Menu", expressionsMenu);
-            expressionParameters = EditorGUILayout.Toggle("Parameters", expressionParameters);
+            if (folding = EditorGUILayout.Foldout(folding, "Expressions"))
+            {
+                expressionsMenu = EditorGUILayout.Toggle("Menu", expressionsMenu);
+                expressionParameters = EditorGUILayout.Toggle("Parameters", expressionParameters);
+
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Pipeline Manager", EditorStyles.boldLabel);
