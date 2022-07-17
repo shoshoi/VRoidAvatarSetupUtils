@@ -40,10 +40,29 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters srcExpressionParameters;
 
         public int avatarMode = 0;
+
+        // VRC Avatar Descripter
+
+        //// View
         public bool viewPosition = true;
+
+        //// Eye Look
         public bool eyeMovements = true;
         public bool rotationStates = true;
+
+        //// Playerble Layers
+        public bool baseAnimationLayers = true;
+        public bool specialAnimationLayers = true;
+
+        //// Expressions
+        public bool expressionsMenu = true;
+        public bool expressionParameters = true;
+        
+        // Pipeline Manager
         public bool blueprintId = true;
+
+        // PhysBone
+        //// PhysBones
         public bool physBones = true;
         public bool physBones_hair = true;
         public bool physBones_skirt = true;
@@ -51,11 +70,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public bool physBones_sleeve = true;
         public bool physBones_other = true;
         public bool physBoneColiders = true;
+
+        // Object
         public bool objects = true;
-        public bool baseAnimationLayers = true;
-        public bool specialAnimationLayers = true;
-        public bool expressionsMenu = true;
-        public bool expressionParameters = true;
+
+        // Constraints
         public bool aimConstraint = true;
         public bool lookAtConstraint = true;
         public bool parentConstraint = true;
@@ -70,37 +89,6 @@ namespace Jirko.Unity.VRoidAvatarUtils
         }
         void InitDTO()
         {
-
-            VRCAvatarDescriptor sourceAvatarDescriptor = null;
-            sourceAvatarDescriptor = cloneGameObject.GetComponent<VRCAvatarDescriptor>();
-
-            viewX = sourceAvatarDescriptor.ViewPosition.x;
-            viewY = sourceAvatarDescriptor.ViewPosition.y;
-            viewZ = sourceAvatarDescriptor.ViewPosition.z;
-
-            confidence = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.confidence;
-            excitement = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.excitement;
-            srcBaseAnimationLayers = sourceAvatarDescriptor.baseAnimationLayers;
-            srcSpecialAnimationLayers = sourceAvatarDescriptor.specialAnimationLayers;
-            srcExpressionsMenu = sourceAvatarDescriptor.expressionsMenu;
-            srcExpressionParameters = sourceAvatarDescriptor.expressionParameters;
-
-            EyeRotations eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingRight;
-            quaterRL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
-            quaterRL = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-            eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingLeft;
-            quaterLL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
-            quaterLR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-            eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingDown;
-            quaterDL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
-            quaterDR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-            eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingUp;
-            quaterUL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
-            quaterUR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-            eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingStraight;
-            quaterSL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
-            quaterSR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
-
             VRC.Core.PipelineManager sourcePipelineManager = cloneGameObject.GetComponent<VRC.Core.PipelineManager>();
 
             physBoneDict = new Dictionary<string, List<VRCPhysBone>>();
@@ -121,6 +109,40 @@ namespace Jirko.Unity.VRoidAvatarUtils
         }
         public void CopyToTarget(GameObject gameObject)
         {
+            VRCAvatarDescriptor sourceAvatarDescriptor = null;
+            sourceAvatarDescriptor = cloneGameObject.GetComponent<VRCAvatarDescriptor>();
+
+            if (ShouldCopyVRCAvatarDescripter())
+            {
+
+                viewX = sourceAvatarDescriptor.ViewPosition.x;
+                viewY = sourceAvatarDescriptor.ViewPosition.y;
+                viewZ = sourceAvatarDescriptor.ViewPosition.z;
+
+                confidence = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.confidence;
+                excitement = sourceAvatarDescriptor.customEyeLookSettings.eyeMovement.excitement;
+                srcBaseAnimationLayers = sourceAvatarDescriptor.baseAnimationLayers;
+                srcSpecialAnimationLayers = sourceAvatarDescriptor.specialAnimationLayers;
+                srcExpressionsMenu = sourceAvatarDescriptor.expressionsMenu;
+                srcExpressionParameters = sourceAvatarDescriptor.expressionParameters;
+
+                EyeRotations eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingRight;
+                quaterRL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
+                quaterRL = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
+                eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingLeft;
+                quaterLL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
+                quaterLR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
+                eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingDown;
+                quaterDL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
+                quaterDR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
+                eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingUp;
+                quaterUL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
+                quaterUR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
+                eyesLooking = sourceAvatarDescriptor.customEyeLookSettings.eyesLookingStraight;
+                quaterSL = new Quaternion(eyesLooking.left.x, eyesLooking.left.y, eyesLooking.left.z, eyesLooking.left.w);
+                quaterSR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
+            }
+
             this.messages = new List<string>();
             this.errors = new List<string>();
             this.boneName = new List<string>();
@@ -514,6 +536,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 rtn = rtn || str.Contains(name);
             }
             return rtn;
+        }
+        private bool ShouldCopyVRCAvatarDescripter()
+        {
+            return viewPosition || eyeMovements || rotationStates || baseAnimationLayers ||
+                   specialAnimationLayers || expressionsMenu || expressionParameters;
         }
     }
     public static class Extensions
