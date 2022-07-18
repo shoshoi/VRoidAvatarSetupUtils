@@ -15,6 +15,12 @@ namespace Jirko.Unity.VRoidAvatarUtils
         private Dictionary<string, List<VRCPhysBone>> physBoneDict;
         private List<string> boneName;
         private List<string> exclusionBoneName;
+
+        private VRCAvatarDescriptor sourceAvatarDescriptor;
+        private VRCAvatarDescriptor targetAvatarDescriptor;
+        private VRC.Core.PipelineManager sourcePipelineManager;
+        private VRC.Core.PipelineManager targetPipelineManager;
+
         public List<string> messages;
         public List<string> errors;
         public float viewX = 0f;
@@ -85,36 +91,12 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public VRoidAvatar(GameObject gameObject)
         {
             cloneGameObject = UnityEngine.Object.Instantiate(gameObject);
-            this.InitDTO();
-        }
-        void InitDTO()
-        {
-            VRC.Core.PipelineManager sourcePipelineManager = cloneGameObject.GetComponent<VRC.Core.PipelineManager>();
 
-            physBoneDict = new Dictionary<string, List<VRCPhysBone>>();
-
-            VRCPhysBone[] physBones;
-            physBones = cloneGameObject.GetComponentsInChildren<VRCPhysBone>();
-            foreach (var ph in physBones)
-            {
-                if (!physBoneDict.ContainsKey(ph.gameObject.GetFullPath()))
-                {
-                    physBoneDict.Add(ph.gameObject.GetFullPath(), new List<VRCPhysBone>());
-                }
-                physBoneDict[ph.gameObject.GetFullPath()].Add(ph);
-            }
-            srcBlueprintId = sourcePipelineManager.blueprintId;
-
-
-        }
-        public void CopyToTarget(GameObject gameObject)
-        {
-            VRCAvatarDescriptor sourceAvatarDescriptor = null;
             sourceAvatarDescriptor = cloneGameObject.GetComponent<VRCAvatarDescriptor>();
+            sourcePipelineManager = cloneGameObject.GetComponent<VRC.Core.PipelineManager>();
 
-            if (ShouldCopyVRCAvatarDescripter())
+            if (ShouldCopyVRCAvatarDescripter() && sourceAvatarDescriptor != null)
             {
-
                 viewX = sourceAvatarDescriptor.ViewPosition.x;
                 viewY = sourceAvatarDescriptor.ViewPosition.y;
                 viewZ = sourceAvatarDescriptor.ViewPosition.z;
@@ -143,6 +125,24 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 quaterSR = new Quaternion(eyesLooking.right.x, eyesLooking.right.y, eyesLooking.right.z, eyesLooking.right.w);
             }
 
+            physBoneDict = new Dictionary<string, List<VRCPhysBone>>();
+
+            VRCPhysBone[] physBones;
+            physBones = cloneGameObject.GetComponentsInChildren<VRCPhysBone>();
+            foreach (var ph in physBones)
+            {
+                if (!physBoneDict.ContainsKey(ph.gameObject.GetFullPath()))
+                {
+                    physBoneDict.Add(ph.gameObject.GetFullPath(), new List<VRCPhysBone>());
+                }
+                physBoneDict[ph.gameObject.GetFullPath()].Add(ph);
+            }
+        }
+        public void CopyToTarget(GameObject targetObject)
+        {
+            targetAvatarDescriptor = targetObject.GetComponent<VRCAvatarDescriptor>();
+            targetPipelineManager = targetObject.GetComponent<VRC.Core.PipelineManager>();
+
             this.messages = new List<string>();
             this.errors = new List<string>();
             this.boneName = new List<string>();
@@ -170,105 +170,121 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 exclusionBoneName.Add("Sleeve");
             }
 
-            VRCAvatarDescriptor targetAvatarDescriptor = gameObject.GetComponent<VRCAvatarDescriptor>();
-
-            if (viewPosition)
+            if (ShouldCopyVRCAvatarDescripter() && sourceAvatarDescriptor == null)
             {
-                messages.Add("View Positionをコピー");
-
-                targetAvatarDescriptor.ViewPosition.x = viewX;
-                targetAvatarDescriptor.ViewPosition.y = viewY;
-                targetAvatarDescriptor.ViewPosition.z = viewZ;
+                errors.Add("コピー元アバターにVRCAvatarDescriptorコンポーネントがないためコピーできませんでした。\n VRCAvatarDescriptor配下の項目のチェックを外すか、コピー元アバターにコンポーネントを追加してください");
             }
-
-            if (eyeMovements)
+            if (ShouldCopyVRCAvatarDescripter() && targetAvatarDescriptor == null)
             {
-                messages.Add("Eye Look - Eye Movementsをコピー");
-
-                targetAvatarDescriptor.customEyeLookSettings.eyeMovement.confidence = confidence;
-                targetAvatarDescriptor.customEyeLookSettings.eyeMovement.excitement = excitement;
+                errors.Add("コピー先アバターにVRCAvatarDescriptorコンポーネントがないためコピーできませんでした。\n VRCAvatarDescriptor配下の項目のチェックを外すか、コピー先アバターにコンポーネントを追加してください");
             }
-
-            if (rotationStates)
+            
+            if(ShouldCopyVRCAvatarDescripter() && sourceAvatarDescriptor != null && targetAvatarDescriptor != null)
             {
-                messages.Add("Eye Look - Rotation Statesをコピー");
-
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingRight.left = quaterRL;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingRight.right = quaterRR;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingLeft.left = quaterLL;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingLeft.right = quaterLR;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingDown.left = quaterDL;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingDown.right = quaterDR;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingUp.left = quaterUL;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingUp.right = quaterUR;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.left = quaterSL;
-                targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.right = quaterSR;
-            }
-
-            if (baseAnimationLayers)
-            {
-                messages.Add("BaseAnimationLayersをコピー");
-                foreach (var layer in srcBaseAnimationLayers)
+                if (viewPosition)
                 {
-                    switch (layer.type)
+                    messages.Add("View Positionをコピー");
+
+                    targetAvatarDescriptor.ViewPosition.x = viewX;
+                    targetAvatarDescriptor.ViewPosition.y = viewY;
+                    targetAvatarDescriptor.ViewPosition.z = viewZ;
+                }
+
+                if (eyeMovements)
+                {
+                    messages.Add("Eye Look - Eye Movementsをコピー");
+
+                    targetAvatarDescriptor.customEyeLookSettings.eyeMovement.confidence = confidence;
+                    targetAvatarDescriptor.customEyeLookSettings.eyeMovement.excitement = excitement;
+                }
+
+                if (rotationStates)
+                {
+                    messages.Add("Eye Look - Rotation Statesをコピー");
+
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingRight.left = quaterRL;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingRight.right = quaterRR;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingLeft.left = quaterLL;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingLeft.right = quaterLR;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingDown.left = quaterDL;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingDown.right = quaterDR;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingUp.left = quaterUL;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingUp.right = quaterUR;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.left = quaterSL;
+                    targetAvatarDescriptor.customEyeLookSettings.eyesLookingStraight.right = quaterSR;
+                }
+
+                if (baseAnimationLayers)
+                {
+                    messages.Add("BaseAnimationLayersをコピー");
+                    foreach (var layer in srcBaseAnimationLayers)
                     {
-                        case VRCAvatarDescriptor.AnimLayerType.Base:
-                            targetAvatarDescriptor.baseAnimationLayers[0] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.Additive:
-                            targetAvatarDescriptor.baseAnimationLayers[1] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.Gesture:
-                            targetAvatarDescriptor.baseAnimationLayers[2] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.Action:
-                            targetAvatarDescriptor.baseAnimationLayers[3] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.FX:
-                            targetAvatarDescriptor.baseAnimationLayers[4] = layer;
-                            break;
+                        switch (layer.type)
+                        {
+                            case VRCAvatarDescriptor.AnimLayerType.Base:
+                                targetAvatarDescriptor.baseAnimationLayers[0] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.Additive:
+                                targetAvatarDescriptor.baseAnimationLayers[1] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.Gesture:
+                                targetAvatarDescriptor.baseAnimationLayers[2] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.Action:
+                                targetAvatarDescriptor.baseAnimationLayers[3] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.FX:
+                                targetAvatarDescriptor.baseAnimationLayers[4] = layer;
+                                break;
+                        }
                     }
+                }
+
+                if (specialAnimationLayers)
+                {
+                    messages.Add("SpecialAnimationLayersをコピー");
+                    foreach (var layer in srcSpecialAnimationLayers)
+                    {
+                        switch (layer.type)
+                        {
+                            case VRCAvatarDescriptor.AnimLayerType.Sitting:
+                                targetAvatarDescriptor.specialAnimationLayers[0] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.TPose:
+                                targetAvatarDescriptor.specialAnimationLayers[1] = layer;
+                                break;
+                            case VRCAvatarDescriptor.AnimLayerType.IKPose:
+                                targetAvatarDescriptor.specialAnimationLayers[2] = layer;
+                                break;
+                        }
+                    }
+                }
+
+                if (expressionsMenu)
+                {
+                    messages.Add("ExpressionsMenuをコピー");
+                    targetAvatarDescriptor.expressionsMenu = srcExpressionsMenu;
+                }
+
+                if (expressionParameters)
+                {
+                    messages.Add("ExpressionParametersをコピー");
+                    targetAvatarDescriptor.expressionParameters = srcExpressionParameters;
                 }
             }
 
-            if (specialAnimationLayers)
+            if (blueprintId && sourcePipelineManager == null)
             {
-                messages.Add("SpecialAnimationLayersをコピー");
-                foreach (var layer in srcSpecialAnimationLayers)
-                {
-                    switch (layer.type)
-                    {
-                        case VRCAvatarDescriptor.AnimLayerType.Sitting:
-                            targetAvatarDescriptor.specialAnimationLayers[0] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.TPose:
-                            targetAvatarDescriptor.specialAnimationLayers[1] = layer;
-                            break;
-                        case VRCAvatarDescriptor.AnimLayerType.IKPose:
-                            targetAvatarDescriptor.specialAnimationLayers[2] = layer;
-                            break;
-                    }
-                }
+                errors.Add("コピー元アバターにPipelineManagerコンポーネントがないためコピーできませんでした。\n Blueprint IDのチェックを外すか、コピー元アバターにコンポーネントを追加してください");
             }
-
-            if (expressionsMenu)
+            if (blueprintId && targetPipelineManager == null)
             {
-                messages.Add("ExpressionsMenuをコピー");
-                targetAvatarDescriptor.expressionsMenu = srcExpressionsMenu;
+                errors.Add("コピー先アバターにPipelineManagerコンポーネントがないためコピーできませんでした。\n Blueprint IDのチェックを外すか、コピー先アバターにコンポーネントを追加してください");
             }
-
-            if (expressionParameters)
-            {
-                messages.Add("ExpressionParametersをコピー");
-                targetAvatarDescriptor.expressionParameters = srcExpressionParameters;
-            }
-
-            if (blueprintId)
+            if (blueprintId && sourcePipelineManager != null && targetPipelineManager != null)
             {
                 messages.Add("BlueprintIDをコピー");
-
-                VRC.Core.PipelineManager targetPipelineManager = gameObject.GetComponent<VRC.Core.PipelineManager>();
-                targetPipelineManager.blueprintId = srcBlueprintId;
+                targetPipelineManager.blueprintId = sourcePipelineManager.blueprintId;
             }
 
             if (objects)
@@ -283,11 +299,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         if ((child.gameObject.transform.parent.gameObject.GetFullPath()).Equals(cloneGameObject.transform.name))
                         {
                             // 1階層目
-                            if (gameObject.transform.Find(child.gameObject.name) == null)
+                            if (targetObject.transform.Find(child.gameObject.name) == null)
                             {
                                 GameObject new_child = UnityEngine.Object.Instantiate(child.gameObject, new Vector3(child.gameObject.transform.position.x, child.gameObject.transform.position.y, child.gameObject.transform.position.z), Quaternion.identity);
                                 new_child.transform.rotation = new Quaternion(child.gameObject.transform.rotation.x, child.gameObject.transform.rotation.y, child.gameObject.transform.rotation.z, child.gameObject.transform.rotation.w);
-                                new_child.transform.parent = gameObject.transform;
+                                new_child.transform.parent = targetObject.transform;
                                 new_child.name = child.gameObject.name;
                                 obj_count++;
                             }
@@ -295,11 +311,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         else
                         {
                             // 2階層以下
-                            if (gameObject.transform.Find(child.gameObject.GetFullPath()) == null)
+                            if (targetObject.transform.Find(child.gameObject.GetFullPath()) == null)
                             {
                                 GameObject new_child = UnityEngine.Object.Instantiate(child.gameObject, new Vector3(child.gameObject.transform.position.x, child.gameObject.transform.position.y, child.gameObject.transform.position.z), Quaternion.identity);
                                 new_child.transform.rotation = new Quaternion(child.gameObject.transform.rotation.x, child.gameObject.transform.rotation.y, child.gameObject.transform.rotation.z, child.gameObject.transform.rotation.w);
-                                new_child.transform.parent = gameObject.transform.Find(child.gameObject.transform.parent.GetFullPath()).transform;
+                                new_child.transform.parent = targetObject.transform.Find(child.gameObject.transform.parent.GetFullPath()).transform;
                                 new_child.name = child.gameObject.name;
                                 obj_count++;
                             }
@@ -314,15 +330,15 @@ namespace Jirko.Unity.VRoidAvatarUtils
             {
                 int col_count = 0;
 
-                physBoneColliders_array = gameObject.GetComponentsInChildren<VRCPhysBoneCollider>();
+                physBoneColliders_array = targetObject.GetComponentsInChildren<VRCPhysBoneCollider>();
                 VRCPhysBoneCollider[] physBoneColliders = null;
                 physBoneColliders = cloneGameObject.GetComponentsInChildren<VRCPhysBoneCollider>();
                 foreach (var col in physBoneColliders)
                 {
                     ComponentUtility.CopyComponent(col);
-                    VRCPhysBoneCollider target = gameObject.transform.Find(col.gameObject.GetFullPath()).gameObject.AddComponent<VRCPhysBoneCollider>();
+                    VRCPhysBoneCollider target = targetObject.transform.Find(col.gameObject.GetFullPath()).gameObject.AddComponent<VRCPhysBoneCollider>();
                     ComponentUtility.PasteComponentValues(target);
-                    if (col.rootTransform) target.rootTransform = gameObject.transform.Find(col.rootTransform.GetFullPath());
+                    if (col.rootTransform) target.rootTransform = targetObject.transform.Find(col.rootTransform.GetFullPath());
                     col_count++;
                 }
                 messages.Add("Phys Bone Coliderをコピー（" + col_count + "件）");
@@ -335,7 +351,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 Dictionary<string, List<VRCPhysBone>> targetBoneDict = new Dictionary<string, List<VRCPhysBone>>();
 
                 VRCPhysBone[] physBones;
-                physBones = gameObject.GetComponentsInChildren<VRCPhysBone>();
+                physBones = targetObject.GetComponentsInChildren<VRCPhysBone>();
                 foreach (var phy in physBones)
                 {
                     if (avatarMode == 0)
@@ -368,20 +384,20 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         }
                     }
                     ComponentUtility.CopyComponent(phy);
-                    GameObject targetObj = gameObject.transform.Find(phy.gameObject.GetFullPath()).gameObject;
+                    GameObject targetObj = targetObject.transform.Find(phy.gameObject.GetFullPath()).gameObject;
                     ComponentUtility.PasteComponentAsNew(targetObj);
 
                     VRCPhysBone[] p = targetObj.GetComponents<VRCPhysBone>();
                     VRCPhysBone newPhysBone = p[p.Length - 1];
 
-                    newPhysBone.rootTransform = gameObject.transform.Find(newPhysBone.rootTransform.gameObject.GetFullPath()).gameObject.transform;
+                    newPhysBone.rootTransform = targetObject.transform.Find(newPhysBone.rootTransform.gameObject.GetFullPath()).gameObject.transform;
 
                     List<VRCPhysBoneColliderBase> new_coliders = new List<VRCPhysBoneColliderBase>();
                     foreach (var tarcol in newPhysBone.colliders)
                     {
                         if (tarcol != null)
                         {
-                            new_coliders.Add(gameObject.transform.Find(tarcol.gameObject.GetFullPath()).gameObject.GetComponent<VRCPhysBoneColliderBase>());
+                            new_coliders.Add(targetObject.transform.Find(tarcol.gameObject.GetFullPath()).gameObject.GetComponent<VRCPhysBoneColliderBase>());
                         }
                     }
                     List<Transform> new_ignoreTransforms = new List<Transform>();
@@ -404,7 +420,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 if (physBoneColiders && physBoneColliders_array != null && physBoneColliders_array.Length > 0)
                 {
 
-                    VRCPhysBone[] allPhysBone = gameObject.GetComponentsInChildren<VRCPhysBone>();
+                    VRCPhysBone[] allPhysBone = targetObject.GetComponentsInChildren<VRCPhysBone>();
                     List<Dictionary<string, object>> allBoneList = new List<Dictionary<string, object>>();
                     foreach (var bone in allPhysBone)
                     {
@@ -446,7 +462,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                     {
                         VRCPhysBone bone = (VRCPhysBone)bonedic["bone"];
                         string new_rootTransform = (string)bonedic["rootTransform"];
-                        bone.rootTransform = gameObject.transform.Find(new_rootTransform).gameObject.transform;
+                        bone.rootTransform = targetObject.transform.Find(new_rootTransform).gameObject.transform;
 
                         List<VRCPhysBoneColliderBase> new_coliders = new List<VRCPhysBoneColliderBase>();
                         List<string> new_coliders_string = (List<string>)bonedic["colliders"];
@@ -454,7 +470,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         {
                             if (tarcol_string != null)
                             {
-                                new_coliders.Add(gameObject.transform.Find(tarcol_string).gameObject.GetComponent<VRCPhysBoneColliderBase>());
+                                new_coliders.Add(targetObject.transform.Find(tarcol_string).gameObject.GetComponent<VRCPhysBoneColliderBase>());
                             }
                         }
 
@@ -464,7 +480,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         {
                             if (tarexc_string != null)
                             {
-                                new_ignoreTransforms.Add(gameObject.transform.Find(tarexc_string));
+                                new_ignoreTransforms.Add(targetObject.transform.Find(tarexc_string));
                             }
                         }
                         bone.colliders = new_coliders;
@@ -488,12 +504,12 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         foreach (ConstraintSource f in from)
                         {
                             ConstraintSource d = new ConstraintSource();
-                            d.sourceTransform = gameObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
+                            d.sourceTransform = targetObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
                             d.weight = f.weight;
                             dest.Add(d);
                         }
 
-                        Transform target = gameObject.transform.Find(constraint.gameObject.GetFullPath());
+                        Transform target = targetObject.transform.Find(constraint.gameObject.GetFullPath());
                         target.GetComponent<T>().SetSources(dest);
 
                         constraints_count++;

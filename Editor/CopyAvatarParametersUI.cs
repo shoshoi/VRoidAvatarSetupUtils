@@ -37,6 +37,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
         public bool scaleConstraint = true;
 
         public string messages = "";
+        public string errors = "";
 
         private VRoidAvatar sourceAvatarDTO = null;
 
@@ -154,19 +155,41 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 Undo.RecordObject(targetObject, "Copy Parameters " + targetObject.name);
                 EditorUtility.SetDirty(targetObject);
                 messages = "";
+                errors = "";
                 sourceAvatarDTO.CopyToTarget(targetObject);
+                if (sourceAvatarDTO.errors.Count > 0)
+                {
+                    errors = "---エラー--------------\n";
+                    int errorcount = 1;
+                    foreach (string error in sourceAvatarDTO.errors)
+                    {
+                        errors = errors + errorcount.ToString() + "." + error + "\n";
+                        errorcount += 1;
+                    }
+                }
 
                 if (sourceAvatarDTO.messages.Count > 0)
                 {
-                    messages = "---messages-----------\n" + string.Join("\n", sourceAvatarDTO.messages) + "\nコピーが完了しました。";
+                    messages = "---メッセージ-----------\n";
+                    int messagecount = 1;
+                    foreach (string message in sourceAvatarDTO.messages)
+                    {
+                        messages = messages + messagecount.ToString() + "." + message + "\n";
+                        messagecount += 1;
+                    }
+                    messages = messages + "コピーが完了しました。";
                 }
-
+                if (errors != "")
+                {
+                    messages = errors + messages;
+                }
             }
             if (sourceObject == null || targetObject == null)
             {
                 EditorGUI.EndDisabledGroup();
             }
             messagesScrollPosition = EditorGUILayout.BeginScrollView(messagesScrollPosition);
+
             GUILayout.Label(messages);
             EditorGUILayout.EndScrollView();
         }
