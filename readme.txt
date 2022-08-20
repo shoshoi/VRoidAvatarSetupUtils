@@ -12,6 +12,9 @@ https://jirko.booth.pm/items/3232745
 ・PhysBonesのColliders項目のMissingやNoneを一括で削除する
 　https://qiita.com/shoshoi/items/85f3a16e2ee5cf247928
 
+・VRChat用VRoidアバターを暗いところでも明るくなるようEmissionの一括設定を行う
+　https://qiita.com/shoshoi/items/27f7cea4b141f1747061
+
 ◆利用規約・免責事項
 本規約は本商品に含まれるすべてのスクリプトやファイルに共通で適用されるものとします。
 本スクリプトのEditor拡張の使用およびそれにより作成されたものによる
@@ -19,4 +22,7 @@ https://jirko.booth.pm/items/3232745
 本スクリプトはMITライセンスで運用されます。
 著作権はshoshoiに帰属します。
 
-2022.07.16 shoshoi
+**VRoidAvatarSetupUtils/Editor/MToonEmissionSetup/*.cs**
+このファイルは、Unityのエディタ拡張機能「MaterialSetupUtils」をベースにしたもので、該当コードはMITです。
+
+2022.08.20 shoshoi
