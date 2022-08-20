@@ -504,7 +504,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                         foreach (ConstraintSource f in from)
                         {
                             ConstraintSource d = new ConstraintSource();
-                            d.sourceTransform = targetObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
+
+                            if (f.sourceTransform != null)
+                            {
+                                d.sourceTransform = gameObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
+                            }
                             d.weight = f.weight;
                             dest.Add(d);
                         }
