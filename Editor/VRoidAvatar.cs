@@ -507,7 +507,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
 
                             if (f.sourceTransform != null)
                             {
-                                d.sourceTransform = gameObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
+                                d.sourceTransform = targetObject.transform.Find(f.sourceTransform.gameObject.GetFullPath());
                             }
                             d.weight = f.weight;
                             dest.Add(d);
