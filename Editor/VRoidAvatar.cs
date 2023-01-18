@@ -178,8 +178,8 @@ namespace Jirko.Unity.VRoidAvatarUtils
             {
                 errors.Add("コピー先アバターにVRCAvatarDescriptorコンポーネントがないためコピーできませんでした。\n VRCAvatarDescriptor配下の項目のチェックを外すか、コピー先アバターにコンポーネントを追加してください");
             }
-            
-            if(ShouldCopyVRCAvatarDescripter() && sourceAvatarDescriptor != null && targetAvatarDescriptor != null)
+
+            if (ShouldCopyVRCAvatarDescripter() && sourceAvatarDescriptor != null && targetAvatarDescriptor != null)
             {
                 if (viewPosition)
                 {
@@ -372,7 +372,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 physBones = cloneGameObject.GetComponentsInChildren<VRCPhysBone>();
                 foreach (var phy in physBones)
                 {
-                    if (avatarMode == 0)
+                    if (avatarMode == 0 && phy.rootTransform != null)
                     {
                         if (checkExclutionPhysBoneContain(phy.rootTransform.name))
                         {
@@ -390,7 +390,10 @@ namespace Jirko.Unity.VRoidAvatarUtils
                     VRCPhysBone[] p = targetObj.GetComponents<VRCPhysBone>();
                     VRCPhysBone newPhysBone = p[p.Length - 1];
 
-                    newPhysBone.rootTransform = targetObject.transform.Find(newPhysBone.rootTransform.gameObject.GetFullPath()).gameObject.transform;
+                    if (phy.rootTransform != null)
+                    {
+                        newPhysBone.rootTransform = targetObject.transform.Find(newPhysBone.rootTransform.gameObject.GetFullPath()).gameObject.transform;
+                    }
 
                     List<VRCPhysBoneColliderBase> new_coliders = new List<VRCPhysBoneColliderBase>();
                     foreach (var tarcol in newPhysBone.colliders)
