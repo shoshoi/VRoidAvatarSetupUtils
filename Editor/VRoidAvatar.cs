@@ -63,7 +63,7 @@ namespace Jirko.Unity.VRoidAvatarUtils
         //// Expressions
         public bool expressionsMenu = true;
         public bool expressionParameters = true;
-        
+
         // Pipeline Manager
         public bool blueprintId = true;
 
@@ -372,6 +372,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 physBones = cloneGameObject.GetComponentsInChildren<VRCPhysBone>();
                 foreach (var phy in physBones)
                 {
+                    if (targetObject.transform.Find(phy.gameObject.GetFullPath()) == null)
+                    {
+                        continue;
+                    }
+
                     if (avatarMode == 0)
                     {
                         if (checkExclutionPhysBoneContain(phy.rootTransform.name))
@@ -497,6 +502,11 @@ namespace Jirko.Unity.VRoidAvatarUtils
                 {
                     foreach (T constraint in constraints)
                     {
+                        if (targetObject.transform.Find(constraint.gameObject.GetFullPath()) == null)
+                        {
+                            continue;
+                        }
+
                         List<ConstraintSource> dest = new List<ConstraintSource>();
                         List<ConstraintSource> from = new List<ConstraintSource>();
                         constraint.GetSources(from);
